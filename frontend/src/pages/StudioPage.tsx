@@ -36,7 +36,7 @@ export default function StudioPage() {
   const [deleting, setDeleting] = useState<VideoListItem | null>(null);
 
   useEffect(() => {
-    document.title = `${t('studio.title')} - MiniTube`;
+    document.title = `${t('studio.title')} - MyTube`;
   }, [t]);
 
   const list = useInfiniteQuery({

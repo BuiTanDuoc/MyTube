@@ -11,9 +11,9 @@ export function LogoMark() {
 
 export default function Logo() {
   return (
-    <Link to="/" className="logo" aria-label="MiniTube">
+    <Link to="/" className="logo" aria-label="MyTube">
       <LogoMark />
-      <span>MiniTube</span>
+      <span>MyTube</span>
     </Link>
   );
 }

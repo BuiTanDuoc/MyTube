@@ -15,7 +15,7 @@ export default function PlaylistsPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    document.title = `${t('playlists.title')} - MiniTube`;
+    document.title = `${t('playlists.title')} - MyTube`;
   }, [t]);
 
   const { data, isPending, isError, error, refetch } = useQuery({ queryKey: ['playlists', 'mine'], queryFn: () => playlistsApi.mine() });

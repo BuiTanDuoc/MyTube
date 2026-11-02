@@ -30,7 +30,7 @@ export default function SearchPage() {
   const duration = pick(params.get('duration'), DURATIONS, 'Any');
 
   useEffect(() => {
-    document.title = q ? `${q} - MiniTube` : 'MiniTube';
+    document.title = q ? `${q} - MyTube` : 'MyTube';
   }, [q]);
 
   const results = useInfiniteQuery({

@@ -21,7 +21,7 @@ export default function HistoryPage() {
   const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
-    document.title = `${t('history.title')} - MiniTube`;
+    document.title = `${t('history.title')} - MyTube`;
   }, [t]);
 
   const list = useInfiniteQuery({

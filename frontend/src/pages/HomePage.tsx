@@ -21,7 +21,7 @@ export default function HomePage() {
   const userKey = user?.id ?? 'anon';
 
   useEffect(() => {
-    document.title = 'MiniTube';
+    document.title = 'MyTube';
   }, []);
 
   const recommended = useInfiniteQuery({

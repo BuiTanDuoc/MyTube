@@ -37,7 +37,7 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    document.title = `${t('upload.title')} - MiniTube`;
+    document.title = `${t('upload.title')} - MyTube`;
   }, [t]);
 
   // Do not lose a running upload by accident

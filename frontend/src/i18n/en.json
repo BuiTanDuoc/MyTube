@@ -138,7 +138,7 @@
   },
   "auth": {
     "signInTitle": "Sign in",
-    "signInSub": "to continue to MiniTube",
+    "signInSub": "to continue to MyTube",
     "emailOrUser": "Email or username",
     "password": "Password",
     "forgotLink": "Forgot password?",

@@ -28,7 +28,7 @@ export default function ChannelPage() {
   });
 
   useEffect(() => {
-    document.title = profile.data ? `${profile.data.displayName} - MiniTube` : 'MiniTube';
+    document.title = profile.data ? `${profile.data.displayName} - MyTube` : 'MyTube';
   }, [profile.data]);
 
   if (profile.isPending) return <Spinner />;

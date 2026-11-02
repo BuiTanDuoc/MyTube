@@ -136,7 +136,7 @@
   },
   "auth": {
     "signInTitle": "Đăng nhập",
-    "signInSub": "để tiếp tục với MiniTube",
+    "signInSub": "để tiếp tục với MyTube",
     "emailOrUser": "Email hoặc tên đăng nhập",
     "password": "Mật khẩu",
     "forgotLink": "Quên mật khẩu?",

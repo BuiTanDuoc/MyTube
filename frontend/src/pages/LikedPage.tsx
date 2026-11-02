@@ -9,7 +9,7 @@ export default function LikedPage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    document.title = `${t('liked.title')} - MiniTube`;
+    document.title = `${t('liked.title')} - MyTube`;
   }, [t]);
 
   const list = useInfiniteQuery({

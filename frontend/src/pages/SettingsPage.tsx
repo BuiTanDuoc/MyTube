@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = `${t('settings.title')} - MiniTube`;
+    document.title = `${t('settings.title')} - MyTube`;
   }, [t]);
 
   if (!user) return null; // RequireAuth guarantees a user

@@ -91,7 +91,7 @@ export default function PlaylistPage() {
   const canManage = isOwner && pl?.kind === 'Custom';
 
   useEffect(() => {
-    document.title = pl ? `${titleOf(pl)} - MiniTube` : 'MiniTube';
+    document.title = pl ? `${titleOf(pl)} - MyTube` : 'MyTube';
   }, [pl, titleOf]);
 
   // ---- reordering: drag and drop (mouse) + up/down buttons (keyboard, touch) ----

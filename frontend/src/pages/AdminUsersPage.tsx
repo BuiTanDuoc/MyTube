@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   const debounced = useDebounce(search.trim(), 300);
 
   useEffect(() => {
-    document.title = `${t('admin.title')} - MiniTube`;
+    document.title = `${t('admin.title')} - MyTube`;
   }, [t]);
 
   const list = useInfiniteQuery({

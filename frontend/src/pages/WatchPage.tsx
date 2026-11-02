@@ -74,9 +74,9 @@ export default function WatchPage() {
   }, [id]);
 
   useEffect(() => {
-    document.title = video ? `${video.title} - MiniTube` : 'MiniTube';
+    document.title = video ? `${video.title} - MyTube` : 'MyTube';
     return () => {
-      document.title = 'MiniTube';
+      document.title = 'MyTube';
     };
   }, [video?.title]); // eslint-disable-line react-hooks/exhaustive-deps
 
