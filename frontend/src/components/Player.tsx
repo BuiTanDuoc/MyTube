@@ -7,6 +7,7 @@ import { tokens } from '../api/tokens';
 import type { VideoDto } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import { apiUrl } from '../lib/url';
+import { loadVolume, saveVolume, VOLUME_STORAGE_KEY } from '../lib/volume';
 
 interface Props {
   video: VideoDto;
@@ -191,6 +192,32 @@ export default function Player({ video, startAt, onEnded, onViewCounted }: Props
       if (isAudio && 'mediaSession' in navigator) navigator.mediaSession.metadata = null;
     };
   }, [video.id, video.streamUrl, video.durationSeconds]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Remember volume + mute: restored on refresh / next video, and kept in sync between open tabs
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const apply = () => {
+      const saved = loadVolume();
+      if (!saved) return;
+      if (el.volume !== saved.volume) el.volume = saved.volume;
+      if (el.muted !== saved.muted) el.muted = saved.muted;
+    };
+    apply();
+
+    const onVolumeChange = () => saveVolume({ volume: el.volume, muted: el.muted });
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === VOLUME_STORAGE_KEY) apply();
+    };
+
+    el.addEventListener('volumechange', onVolumeChange);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      el.removeEventListener('volumechange', onVolumeChange);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [video.id]);
 
   const chooseLevel = (index: number) => {
     if (hlsRef.current) hlsRef.current.nextLevel = index; // -1 = automatic
