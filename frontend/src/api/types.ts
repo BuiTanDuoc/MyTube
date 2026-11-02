@@ -133,3 +133,44 @@ export interface VideoInput {
   description: string | null;
   visibility: Visibility;
 }
+
+export type PlaylistKind = 'Custom' | 'WatchLater';
+
+export interface PlaylistDto {
+  id: string;
+  title: string;
+  description: string | null;
+  visibility: Visibility;
+  kind: PlaylistKind;
+  owner: VideoOwner;
+  itemCount: number;
+  thumbnailUrl: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  containsVideo: boolean | null;
+}
+
+export interface PlaylistItemDto {
+  itemId: string;
+  position: number;
+  addedAt: string;
+  video: VideoListItem;
+}
+
+export interface PlaylistInput {
+  title: string;
+  description: string | null;
+  visibility: Visibility;
+}
+
+export interface AdminUser {
+  id: string;
+  userName: string;
+  email: string;
+  displayName: string;
+  emailConfirmed: boolean;
+  isLockedOut: boolean;
+  lockoutEnd: string | null;
+  roles: string[];
+  createdAt: string;
+}

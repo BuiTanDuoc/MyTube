@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { VideoListItem } from '../api/types';
 import { useFormatters } from '../lib/format';
@@ -7,19 +8,26 @@ import { useViewsText, VideoThumb } from './VideoCard';
 interface Props {
   video: VideoListItem;
   variant?: 'large' | 'compact';
+  /** Keeps the playlist queue open when the video is opened. */
+  listId?: string;
+  /** 0..1 red "watched so far" bar. */
+  progress?: number;
+  /** Buttons shown at the right edge (remove, move...). */
+  actions?: ReactNode;
 }
 
-/** Horizontal card: search results (large) and the "related" sidebar (compact). */
-export default function VideoRow({ video, variant = 'compact' }: Props) {
+/** Horizontal card: search results / history (large) and the related + queue sidebars (compact). */
+export default function VideoRow({ video, variant = 'compact', listId, progress, actions }: Props) {
   const fmt = useFormatters();
   const viewsText = useViewsText();
+  const to = `/watch/${video.id}${listId ? `?list=${listId}` : ''}`;
 
   return (
-    <article className={`vrow vrow--${variant}`}>
-      <VideoThumb video={video} />
+    <article className={`vrow vrow--${variant} ${actions ? 'vrow--actions' : ''}`}>
+      <VideoThumb video={video} progress={progress} to={to} />
       <div>
         <h3 className="vrow__title">
-          <Link to={`/watch/${video.id}`}>{video.title}</Link>
+          <Link to={to}>{video.title}</Link>
         </h3>
         {variant === 'large' ? (
           <>
@@ -44,6 +52,7 @@ export default function VideoRow({ video, variant = 'compact' }: Props) {
           </>
         )}
       </div>
+      {actions && <div className="vrow__actions">{actions}</div>}
     </article>
   );
 }

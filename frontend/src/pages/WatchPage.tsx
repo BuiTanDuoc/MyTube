@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clapperboard, Loader, ThumbsDown, ThumbsUp, TriangleAlert, VideoOff } from 'lucide-react';
+import { Clapperboard, ListPlus, Loader, ThumbsDown, ThumbsUp, TriangleAlert, VideoOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { videosApi } from '../api/endpoints';
+import { playlistsApi, videosApi } from '../api/endpoints';
 import { parseError } from '../api/errors';
 import type { ReactionType, VideoDto } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import Avatar from '../components/Avatar';
 import EmptyState from '../components/EmptyState';
 import Player from '../components/Player';
+import SaveToPlaylistDialog from '../components/SaveToPlaylistDialog';
 import Spinner from '../components/Spinner';
 import { useToast } from '../components/Toast';
 import VideoRow from '../components/VideoRow';
 import { useFormatters } from '../lib/format';
+import { usePlaylistTitle } from '../lib/playlist';
 
 const BUSY = new Set(['PendingUpload', 'Uploading', 'Queued', 'Processing']);
 
 export default function WatchPage() {
   const { id = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const listId = searchParams.get('list'); // set when the video is opened from a playlist
   const { t } = useTranslation();
   const { user } = useAuth();
   const fmt = useFormatters();
@@ -26,8 +30,10 @@ export default function WatchPage() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const titleOf = usePlaylistTitle();
 
-  const queryKey = ['video', id, user?.id ?? 'anon'] as const;
+  const viewer = user?.id ?? 'anon';
+  const queryKey = ['video', id, viewer] as const;
 
   const { data: video, isPending, isError } = useQuery({
     queryKey,
@@ -45,8 +51,21 @@ export default function WatchPage() {
     staleTime: 5 * 60_000
   });
 
+  // The playlist queue (first 100 items) when the page was opened with ?list=
+  const queue = useQuery({
+    queryKey: ['playlist-queue', listId, viewer],
+    queryFn: async () => {
+      const [playlist, page] = await Promise.all([playlistsApi.get(listId!), playlistsApi.items(listId!, 1, 100)]);
+      return { playlist, items: page.items };
+    },
+    enabled: !!listId,
+    retry: false,
+    staleTime: 60_000
+  });
+
   const [autoplay, setAutoplay] = useState(() => localStorage.getItem('mt.autoplay') !== 'off');
   const [expanded, setExpanded] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
   // Resume position is captured once per video: later refetches must not move the playhead
   const resumeFor = useRef<{ id: string; at: number } | null>(null);
 
@@ -63,8 +82,10 @@ export default function WatchPage() {
 
   const react = useMutation({
     mutationFn: (type: ReactionType | null) => videosApi.react(id, type),
-    onSuccess: (state) =>
-      queryClient.setQueryData<VideoDto>(queryKey, (old) => (old ? { ...old, myReaction: state.myReaction, likeCount: state.likeCount } : old)),
+    onSuccess: (state) => {
+      queryClient.setQueryData<VideoDto>(queryKey, (old) => (old ? { ...old, myReaction: state.myReaction, likeCount: state.likeCount } : old));
+      void queryClient.invalidateQueries({ queryKey: ['liked'] });
+    },
     onError: (e) => toast.error(parseError(e).message)
   });
 
@@ -88,11 +109,12 @@ export default function WatchPage() {
   const isOwner = user?.id === video.owner.id;
   if (resumeFor.current?.id !== video.id) resumeFor.current = { id: video.id, at: video.resumePositionSeconds ?? 0 };
 
+  const requireLogin = () => {
+    navigate('/login', { state: { from: location.pathname + location.search } });
+  };
+
   const toggleReaction = (type: ReactionType) => {
-    if (!user) {
-      navigate('/login', { state: { from: location.pathname } });
-      return;
-    }
+    if (!user) return requireLogin();
     react.mutate(video.myReaction === type ? null : type);
   };
 
@@ -101,9 +123,21 @@ export default function WatchPage() {
     localStorage.setItem('mt.autoplay', on ? 'on' : 'off');
   };
 
+  const queueItems = queue.data?.items ?? [];
+  const queueIndex = queueItems.findIndex((i) => i.video.id === video.id);
+
   const onEnded = () => {
+    if (!autoplay) return;
+
+    // Inside a playlist: continue with the next item and stop at the end of the list
+    if (listId && queueIndex >= 0) {
+      const next = queueItems[queueIndex + 1];
+      if (next) navigate(`/watch/${next.video.id}?list=${listId}`);
+      return;
+    }
+
     const next = related.data?.[0];
-    if (autoplay && next) navigate(`/watch/${next.id}`);
+    if (next) navigate(`/watch/${next.id}`);
   };
 
   const onViewCounted = (viewCount: number) =>
@@ -140,17 +174,22 @@ export default function WatchPage() {
               </Link>
             )}
             {ready && (
-              <div className="seg" role="group" aria-label={t('video.reactions')}>
-                <button aria-pressed={video.myReaction === 'Like'} onClick={() => toggleReaction('Like')} disabled={react.isPending}>
-                  <ThumbsUp size={18} fill={video.myReaction === 'Like' ? 'currentColor' : 'none'} />
-                  {fmt.compact(video.likeCount)}
-                  <span className="sr-only">{t('video.like')}</span>
+              <>
+                <div className="seg" role="group" aria-label={t('video.reactions')}>
+                  <button aria-pressed={video.myReaction === 'Like'} onClick={() => toggleReaction('Like')} disabled={react.isPending}>
+                    <ThumbsUp size={18} fill={video.myReaction === 'Like' ? 'currentColor' : 'none'} />
+                    {fmt.compact(video.likeCount)}
+                    <span className="sr-only">{t('video.like')}</span>
+                  </button>
+                  <button aria-pressed={video.myReaction === 'Dislike'} onClick={() => toggleReaction('Dislike')} disabled={react.isPending}>
+                    <ThumbsDown size={18} fill={video.myReaction === 'Dislike' ? 'currentColor' : 'none'} />
+                    <span className="sr-only">{t('video.dislike')}</span>
+                  </button>
+                </div>
+                <button className="btn" onClick={() => (user ? setSaveOpen(true) : requireLogin())}>
+                  <ListPlus size={18} /> {t('playlists.save')}
                 </button>
-                <button aria-pressed={video.myReaction === 'Dislike'} onClick={() => toggleReaction('Dislike')} disabled={react.isPending}>
-                  <ThumbsDown size={18} fill={video.myReaction === 'Dislike' ? 'currentColor' : 'none'} />
-                  <span className="sr-only">{t('video.dislike')}</span>
-                </button>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -168,6 +207,27 @@ export default function WatchPage() {
       </div>
 
       <aside className="watch__side" aria-label={t('video.upNext')}>
+        {queue.data && (
+          <section className="queue" aria-label={t('playlists.queue')}>
+            <div className="queue__head">
+              <Link to={`/playlist/${queue.data.playlist.id}`}>
+                <strong>{titleOf(queue.data.playlist)}</strong>
+              </Link>
+              <span className="muted">
+                {queueIndex >= 0 ? `${queueIndex + 1} / ${queueItems.length}` : queueItems.length}
+              </span>
+            </div>
+            <ol className="queue__list">
+              {queueItems.map((it, i) => (
+                <li key={it.itemId} className={it.video.id === video.id ? 'is-current' : ''} aria-current={it.video.id === video.id ? 'true' : undefined}>
+                  <span className="queue__index">{it.video.id === video.id ? '▶' : i + 1}</span>
+                  <VideoRow video={it.video} listId={queue.data.playlist.id} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
         <div className="watch__side-head">
           <h2 className="row-title" style={{ margin: 0, fontSize: 16 }}>
             {t('video.upNext')}
@@ -180,6 +240,8 @@ export default function WatchPage() {
         {related.isPending && ready && <Spinner />}
         {related.data?.map((v) => <VideoRow key={v.id} video={v} />)}
       </aside>
+
+      {user && ready && <SaveToPlaylistDialog videoId={video.id} open={saveOpen} onClose={() => setSaveOpen(false)} />}
     </div>
   );
 }

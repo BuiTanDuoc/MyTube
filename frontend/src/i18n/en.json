@@ -8,7 +8,9 @@
     "edit": "Edit",
     "close": "Close"
   },
-  "a11y": { "skipToContent": "Skip to content" },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
   "nav": {
     "menu": "Menu",
     "home": "Home",
@@ -19,14 +21,40 @@
     "signIn": "Sign in",
     "signOut": "Sign out",
     "settings": "Settings",
-    "yourChannel": "Your channel"
+    "yourChannel": "Your channel",
+    "history": "History",
+    "playlists": "Playlists",
+    "liked": "Liked videos",
+    "admin": "Administration"
   },
   "settings": {
     "theme": "Appearance",
     "light": "Light",
     "dark": "Dark",
     "system": "Device theme",
-    "language": "Language"
+    "language": "Language",
+    "title": "Settings",
+    "profile": "Profile",
+    "password": "Password",
+    "privacy": "Privacy",
+    "account": "Account",
+    "saved": "Profile saved.",
+    "avatarType": "Choose a JPEG, PNG or WebP image.",
+    "avatarSize": "The image must be 2 MB or smaller.",
+    "avatarSaved": "Photo updated.",
+    "avatarHint": "JPEG, PNG or WebP, up to 2 MB. It is cropped to a square.",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo",
+    "removePhotoConfirm": "Your photo will be replaced by your initial.",
+    "bio": "About you",
+    "currentPassword": "Current password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed.",
+    "passwordNote": "You will stay signed in here; your other devices will be signed out.",
+    "pauseHistory": "Pause watch history",
+    "pauseHistoryHint": "While paused, the videos you watch are not saved to your history and don't shape your recommendations.",
+    "verified": "Verified",
+    "unverified": "Not verified"
   },
   "search": {
     "placeholder": "Search",
@@ -201,5 +229,65 @@
     "tooLarge": "The file is too large.",
     "server": "The server had a problem. Please try again later.",
     "loadFailed": "Couldn't load this"
+  },
+  "history": {
+    "title": "Watch history",
+    "empty": "Nothing watched yet",
+    "emptyHint": "Videos you watch will show up here.",
+    "pause": "Pause history",
+    "turnOn": "Turn on history",
+    "clearAll": "Clear all",
+    "clearTitle": "Clear watch history?",
+    "clearConfirm": "This removes every video from your history and resets \"Continue watching\".",
+    "cleared": "Watch history cleared.",
+    "pausedNotice": "Watch history is paused: new videos are not being saved.",
+    "remove": "Remove from history"
+  },
+  "liked": {
+    "title": "Liked videos",
+    "empty": "No liked videos yet",
+    "emptyHint": "Videos you like will be collected here."
+  },
+  "playlists": {
+    "title": "Playlists",
+    "new": "New playlist",
+    "newTitle": "New playlist",
+    "editTitle": "Edit playlist",
+    "name": "Name",
+    "saved": "Playlist saved.",
+    "created": "Playlist created.",
+    "deleted": "Playlist deleted.",
+    "empty": "No playlists yet",
+    "emptyHint": "Create a playlist to collect videos.",
+    "emptyPlaylist": "This playlist is empty",
+    "emptyPlaylistHint": "Use \"Save\" on a video page to add videos here.",
+    "watchLater": "Watch later",
+    "videoCount_one": "{{count}} video",
+    "videoCount_other": "{{count}} videos",
+    "playAll": "Play all",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeVideo": "Remove from playlist",
+    "deleteTitle": "Delete playlist?",
+    "deleteConfirm": "“{{title}}” will be deleted. The videos in it are not affected.",
+    "save": "Save",
+    "saveTo": "Save to…",
+    "savedTo": "Saved to the new playlist.",
+    "createAndSave": "Create and save",
+    "queue": "Playlist queue"
+  },
+  "admin": {
+    "title": "Users",
+    "search": "Search users",
+    "noUsers": "No users found",
+    "roleAdmin": "Admin",
+    "locked": "Locked",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "makeAdmin": "Make admin",
+    "removeAdmin": "Remove admin",
+    "reindex": "Rebuild search",
+    "reindexHint": "Recomputes the accent-free search text of all videos and users",
+    "reindexed": "Search rebuilt: {{videos}} videos, {{users}} users."
   }
 }

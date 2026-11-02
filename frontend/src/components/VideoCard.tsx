@@ -6,9 +6,9 @@ import { formatDuration, useFormatters } from '../lib/format';
 import { apiUrl } from '../lib/url';
 import Avatar from './Avatar';
 
-export function VideoThumb({ video, progress }: { video: VideoListItem; progress?: number }) {
+export function VideoThumb({ video, progress, to }: { video: VideoListItem; progress?: number; to?: string }) {
   return (
-    <Link to={`/watch/${video.id}`} className="vthumb" tabIndex={-1} aria-hidden="true">
+    <Link to={to ?? `/watch/${video.id}`} className="vthumb" tabIndex={-1} aria-hidden="true">
       {video.thumbnailUrl ? (
         <img src={apiUrl(video.thumbnailUrl)} alt="" loading="lazy" />
       ) : (

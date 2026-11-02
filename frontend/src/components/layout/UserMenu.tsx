@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clapperboard, LogOut } from 'lucide-react';
+import { Clapperboard, LogOut, Settings, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { useDismiss } from '../../hooks/useDismiss';
@@ -53,6 +53,16 @@ export default function UserMenu() {
             <Clapperboard size={18} />
             {t('nav.studio')}
           </Link>
+          <Link to="/settings" className="menu-item" role="menuitem" onClick={() => setOpen(false)}>
+            <Settings size={18} />
+            {t('settings.title')}
+          </Link>
+          {user.roles.includes('Admin') && (
+            <Link to="/admin/users" className="menu-item" role="menuitem" onClick={() => setOpen(false)}>
+              <Users size={18} />
+              {t('admin.title')}
+            </Link>
+          )}
           <div className="menu-sep" />
           <button className="menu-item" role="menuitem" onClick={() => void signOut()}>
             <LogOut size={18} />

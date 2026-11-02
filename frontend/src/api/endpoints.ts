@@ -2,10 +2,14 @@ import { api } from './client';
 import { tokens } from './tokens';
 import { apiUrl } from '../lib/url';
 import type {
+  AdminUser,
   AuthResponse,
   ChannelResult,
   DurationFilter,
   Paged,
+  PlaylistDto,
+  PlaylistInput,
+  PlaylistItemDto,
   PublicUser,
   ReactionState,
   ReactionType,
@@ -65,6 +69,9 @@ export const videosApi = {
   remove: (id: string) => api.delete(`/api/videos/${id}`),
   reprocess: (id: string) => api.post<VideoDto>(`/api/videos/${id}/reprocess`).then((r) => r.data),
 
+  liked: (page: number) =>
+    api.get<Paged<VideoListItem>>('/api/videos/liked', { params: { page, pageSize: 24 } }).then((r) => r.data),
+
   related: (id: string) =>
     api.get<VideoListItem[]>(`/api/videos/${id}/related`, { params: { limit: 20 } }).then((r) => r.data),
 
@@ -116,4 +123,50 @@ export const searchApi = {
     api.get<Paged<ChannelResult>>('/api/search/channels', { params: { q, pageSize: 3 } }).then((r) => r.data),
   suggestions: (q: string, signal?: AbortSignal) =>
     api.get<Suggestion[]>('/api/search/suggestions', { params: { q }, signal }).then((r) => r.data)
+};
+
+export const profileApi = {
+  update: (body: { displayName: string; bio: string | null }) => api.put<UserDto>('/api/users/me', body).then((r) => r.data),
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.put<UserDto>('/api/users/me/avatar', form).then((r) => r.data);
+  },
+  removeAvatar: () => api.delete<UserDto>('/api/users/me/avatar').then((r) => r.data),
+  changePassword: (body: { currentPassword: string; newPassword: string }) => api.post('/api/users/me/change-password', body)
+};
+
+export const historyApi = {
+  list: (page: number) =>
+    api.get<Paged<WatchHistoryItem>>('/api/users/me/history', { params: { page, pageSize: 20 } }).then((r) => r.data),
+  remove: (videoId: string) => api.delete(`/api/users/me/history/${videoId}`),
+  clear: () => api.delete('/api/users/me/history'),
+  setPaused: (paused: boolean) => api.put<UserDto>('/api/users/me/history/settings', { paused }).then((r) => r.data)
+};
+
+export const playlistsApi = {
+  /** Every playlist of the user, "Watch later" first. With videoId each one says whether it contains that video. */
+  mine: (videoId?: string) =>
+    api.get<Paged<PlaylistDto>>('/api/playlists/mine', { params: { videoId, pageSize: 100 } }).then((r) => r.data),
+  watchLater: () => api.get<PlaylistDto>('/api/playlists/watch-later').then((r) => r.data),
+  get: (id: string) => api.get<PlaylistDto>(`/api/playlists/${id}`).then((r) => r.data),
+  items: (id: string, page: number, pageSize = 50) =>
+    api.get<Paged<PlaylistItemDto>>(`/api/playlists/${id}/items`, { params: { page, pageSize } }).then((r) => r.data),
+  create: (body: PlaylistInput) => api.post<PlaylistDto>('/api/playlists', body).then((r) => r.data),
+  update: (id: string, body: PlaylistInput) => api.put<PlaylistDto>(`/api/playlists/${id}`, body).then((r) => r.data),
+  remove: (id: string) => api.delete(`/api/playlists/${id}`),
+  addItem: (id: string, videoId: string) => api.post<PlaylistItemDto>(`/api/playlists/${id}/items`, { videoId }).then((r) => r.data),
+  removeItem: (id: string, itemId: string) => api.delete(`/api/playlists/${id}/items/${itemId}`),
+  removeVideo: (id: string, videoId: string) => api.delete(`/api/playlists/${id}/videos/${videoId}`),
+  /** Puts the item right after afterItemId (null = top). */
+  move: (id: string, itemId: string, afterItemId: string | null) =>
+    api.put(`/api/playlists/${id}/items/${itemId}/move`, { afterItemId })
+};
+
+export const adminApi = {
+  users: (page: number, search: string) =>
+    api.get<Paged<AdminUser>>('/api/admin/users', { params: { page, pageSize: 20, search: search || undefined } }).then((r) => r.data),
+  setLocked: (id: string, locked: boolean) => api.put<AdminUser>(`/api/admin/users/${id}/lock`, { locked }).then((r) => r.data),
+  setRoles: (id: string, roles: string[]) => api.put<AdminUser>(`/api/admin/users/${id}/roles`, { roles }).then((r) => r.data),
+  reindexSearch: () => api.post<{ videos: number; users: number }>('/api/admin/search/reindex').then((r) => r.data)
 };

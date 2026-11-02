@@ -18,7 +18,8 @@ API on another address? copy `.env.example` to `.env` and set `VITE_API_PROXY`.
 |---|---|
 | `npm run dev` | dev server |
 | `npm run build` | type-check + production build into `dist/` |
-| `npm test` | unit + smoke tests (token refresh, formatting, main screens) |
+| `npm test` | unit + smoke tests (token refresh, formatting, main screens, playlists, history, admin) |
+| `npm run i18n:check` | verifies `en.json` and `vi.json` have the same keys and every `t('...')` key exists |
 
 Production: serve `dist/` and `/api` + `/media` from the same origin (reverse proxy), or build with
 `VITE_API_URL=https://api.example.com` and add the site origin to `Cors:AllowedOrigins` on the API.
@@ -34,6 +35,11 @@ Production: serve `dist/` and `/api` + `/media` from the same origin (reverse pr
 - **Upload**: drag and drop, upload progress, then live processing progress; blocks unverified emails with a resend button.
 - **Your videos** (studio): status, progress, edit, delete, reprocess failed videos.
 - **Channel page**.
+- **Watch history**: resume position bars, remove one / clear all, pause recording.
+- **Liked videos**.
+- **Playlists**: create / edit / delete, built-in "Watch later", "Save to..." dialog on the watch page (tick playlists or create one on the spot), drag-and-drop or up/down reordering, "Play all" and a playlist queue next to the player (autoplay continues through the list).
+- **Settings**: profile (name, bio), avatar upload / remove, change password, pause watch history, email verification status.
+- **Admin** (admin accounts only): user list with search, lock / unlock, grant / revoke admin, rebuild the search index.
 
 ## How it works
 
@@ -53,6 +59,12 @@ Production: serve `dist/` and `/api` + `/media` from the same origin (reverse pr
 - iPhone Safari plays HLS natively and cannot send an Authorization header, so **private** videos do not play there (public and unlisted do).
 - The refresh token in localStorage is readable by injected scripts; keep the app free of XSS (the API-side hardening would be an httpOnly cookie).
 
+## Routes
+
+`/` home, `/watch/:id[?list=:playlistId]`, `/results?q=`, `/channel/:id`, `/playlist/:id`,
+`/history`, `/liked`, `/playlists`, `/upload`, `/studio`, `/settings`, `/admin/users`,
+`/login`, `/register`, `/forgot-password`, `/reset-password`, `/confirm-email`.
+
 ## Next
 
-History, Liked videos, Playlists (with the "Save to playlist" dialog), profile settings (avatar, password, pause history), admin screens.
+Polish and release: channel playlists tab, thumbnail picker, PWA / production deployment (reverse proxy, HTTPS, forwarded headers), and moving the refresh token to an httpOnly cookie.

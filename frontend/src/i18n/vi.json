@@ -8,7 +8,9 @@
     "edit": "Chỉnh sửa",
     "close": "Đóng"
   },
-  "a11y": { "skipToContent": "Chuyển đến nội dung chính" },
+  "a11y": {
+    "skipToContent": "Chuyển đến nội dung chính"
+  },
   "nav": {
     "menu": "Menu",
     "home": "Trang chủ",
@@ -19,14 +21,40 @@
     "signIn": "Đăng nhập",
     "signOut": "Đăng xuất",
     "settings": "Cài đặt",
-    "yourChannel": "Kênh của bạn"
+    "yourChannel": "Kênh của bạn",
+    "history": "Video đã xem",
+    "playlists": "Danh sách phát",
+    "liked": "Video đã thích",
+    "admin": "Quản trị"
   },
   "settings": {
     "theme": "Giao diện",
     "light": "Sáng",
     "dark": "Tối",
     "system": "Theo thiết bị",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "title": "Cài đặt",
+    "profile": "Hồ sơ",
+    "password": "Mật khẩu",
+    "privacy": "Quyền riêng tư",
+    "account": "Tài khoản",
+    "saved": "Đã lưu hồ sơ.",
+    "avatarType": "Hãy chọn ảnh JPEG, PNG hoặc WebP.",
+    "avatarSize": "Ảnh phải có dung lượng tối đa 2 MB.",
+    "avatarSaved": "Đã cập nhật ảnh.",
+    "avatarHint": "JPEG, PNG hoặc WebP, tối đa 2 MB. Ảnh sẽ được cắt thành hình vuông.",
+    "changePhoto": "Đổi ảnh",
+    "removePhoto": "Xóa ảnh",
+    "removePhotoConfirm": "Ảnh của bạn sẽ được thay bằng chữ cái đầu tên.",
+    "bio": "Giới thiệu",
+    "currentPassword": "Mật khẩu hiện tại",
+    "changePassword": "Đổi mật khẩu",
+    "passwordChanged": "Đã đổi mật khẩu.",
+    "passwordNote": "Bạn vẫn đăng nhập ở đây; các thiết bị khác sẽ bị đăng xuất.",
+    "pauseHistory": "Tạm dừng lịch sử xem",
+    "pauseHistoryHint": "Khi tạm dừng, video bạn xem sẽ không được lưu vào lịch sử và không ảnh hưởng đến gợi ý.",
+    "verified": "Đã xác nhận",
+    "unverified": "Chưa xác nhận"
   },
   "search": {
     "placeholder": "Tìm kiếm",
@@ -199,5 +227,64 @@
     "tooLarge": "Tệp quá lớn.",
     "server": "Máy chủ gặp sự cố. Vui lòng thử lại sau.",
     "loadFailed": "Không tải được nội dung"
+  },
+  "history": {
+    "title": "Video đã xem",
+    "empty": "Chưa xem video nào",
+    "emptyHint": "Các video bạn xem sẽ xuất hiện ở đây.",
+    "pause": "Tạm dừng lịch sử",
+    "turnOn": "Bật lịch sử",
+    "clearAll": "Xóa tất cả",
+    "clearTitle": "Xóa lịch sử xem?",
+    "clearConfirm": "Mọi video sẽ bị xóa khỏi lịch sử và mục \"Xem tiếp\" sẽ được làm mới.",
+    "cleared": "Đã xóa lịch sử xem.",
+    "pausedNotice": "Lịch sử xem đang tạm dừng: các video mới sẽ không được lưu.",
+    "remove": "Xóa khỏi lịch sử"
+  },
+  "liked": {
+    "title": "Video đã thích",
+    "empty": "Chưa thích video nào",
+    "emptyHint": "Các video bạn thích sẽ được tập hợp ở đây."
+  },
+  "playlists": {
+    "title": "Danh sách phát",
+    "new": "Danh sách phát mới",
+    "newTitle": "Danh sách phát mới",
+    "editTitle": "Sửa danh sách phát",
+    "name": "Tên",
+    "saved": "Đã lưu danh sách phát.",
+    "created": "Đã tạo danh sách phát.",
+    "deleted": "Đã xóa danh sách phát.",
+    "empty": "Chưa có danh sách phát nào",
+    "emptyHint": "Tạo danh sách phát để gom các video lại.",
+    "emptyPlaylist": "Danh sách phát này đang trống",
+    "emptyPlaylistHint": "Dùng nút \"Lưu\" ở trang video để thêm video vào đây.",
+    "watchLater": "Xem sau",
+    "videoCount_other": "{{count}} video",
+    "playAll": "Phát tất cả",
+    "moveUp": "Chuyển lên",
+    "moveDown": "Chuyển xuống",
+    "removeVideo": "Xóa khỏi danh sách phát",
+    "deleteTitle": "Xóa danh sách phát?",
+    "deleteConfirm": "“{{title}}” sẽ bị xóa. Các video trong đó không bị ảnh hưởng.",
+    "save": "Lưu",
+    "saveTo": "Lưu vào…",
+    "savedTo": "Đã lưu vào danh sách phát mới.",
+    "createAndSave": "Tạo và lưu",
+    "queue": "Hàng đợi danh sách phát"
+  },
+  "admin": {
+    "title": "Người dùng",
+    "search": "Tìm người dùng",
+    "noUsers": "Không tìm thấy người dùng",
+    "roleAdmin": "Quản trị viên",
+    "locked": "Đã khóa",
+    "lock": "Khóa",
+    "unlock": "Mở khóa",
+    "makeAdmin": "Cấp quyền quản trị",
+    "removeAdmin": "Gỡ quyền quản trị",
+    "reindex": "Dựng lại chỉ mục tìm kiếm",
+    "reindexHint": "Tính lại văn bản tìm kiếm không dấu của mọi video và người dùng",
+    "reindexed": "Đã dựng lại chỉ mục: {{videos}} video, {{users}} người dùng."
   }
 }
