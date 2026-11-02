@@ -5,11 +5,13 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MiniTube.Domain.Enums;
 using MiniTube.Infrastructure.Options;
 
 namespace MiniTube.Infrastructure.Videos;
 
-public sealed record ProbeResult(int Width, int Height, double DurationSeconds, bool HasAudio);
+/// <summary>Width/Height are 0 for audio files. HasCoverArt = an embedded picture (album art) exists.</summary>
+public sealed record ProbeResult(int Width, int Height, double DurationSeconds, bool HasAudio, bool HasCoverArt = false);
 
 public sealed record ProcessResult(int ExitCode, string StdOut, string StdErrTail);
 
@@ -20,7 +22,9 @@ public sealed class FfmpegTools
     // can make FFmpeg read local files or call out to URLs.
     private static readonly HashSet<string> AllowedFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "mov", "mp4", "m4a", "3gp", "matroska", "webm", "avi", "mpegts", "mpeg", "flv", "asf", "ogg"
+        "mov", "mp4", "m4a", "3gp", "matroska", "webm", "avi", "mpegts", "mpeg", "flv", "asf", "ogg",
+        // audio-only containers
+        "mp3", "wav", "flac", "aac"
     };
 
     private readonly VideoOptions _o;
@@ -48,8 +52,9 @@ public sealed class FfmpegTools
         }
     }
 
-    public async Task<ProbeResult> ProbeAsync(string path, CancellationToken ct)
+    public async Task<ProbeResult> ProbeAsync(string path, MediaKind kind, CancellationToken ct)
     {
+        var noun = kind == MediaKind.Audio ? "audio file" : "video";
         var result = await RunAsync(_o.FfprobePath,
         [
             "-v", "error",
@@ -62,12 +67,12 @@ public sealed class FfmpegTools
         if (result.ExitCode != 0)
         {
             _logger.LogWarning("ffprobe failed: {Error}", result.StdErrTail);
-            throw new VideoProcessingException("The file is not a valid video.");
+            throw new VideoProcessingException($"The file is not a valid {noun}.");
         }
 
         JsonDocument doc;
         try { doc = JsonDocument.Parse(result.StdOut); }
-        catch (JsonException) { throw new VideoProcessingException("The file is not a valid video."); }
+        catch (JsonException) { throw new VideoProcessingException($"The file is not a valid {noun}."); }
 
         using (doc)
         {
@@ -82,10 +87,11 @@ public sealed class FfmpegTools
             }
 
             if (!formatName.Split(',').Any(AllowedFormats.Contains))
-                throw new VideoProcessingException("Unsupported video container format.");
+                throw new VideoProcessingException($"Unsupported {noun} container format.");
 
             int width = 0, height = 0;
             var hasAudio = false;
+            var hasCover = false;
             double rotation = 0;
 
             if (root.TryGetProperty("streams", out var streams))
@@ -93,14 +99,27 @@ public sealed class FfmpegTools
                 foreach (var s in streams.EnumerateArray())
                 {
                     var type = s.TryGetProperty("codec_type", out var t) ? t.GetString() : null;
-                    if (type == "audio") { hasAudio = true; continue; }
-                    if (type != "video" || width > 0 || IsAttachedPicture(s)) continue;
+                    if (type == "audio")
+                    {
+                        hasAudio = true;
+                        if (duration <= 0) duration = ReadDuration(s);
+                        continue;
+                    }
+                    if (type == "video" && IsAttachedPicture(s)) { hasCover = true; continue; }
+                    if (type != "video" || width > 0) continue;
 
                     width = ReadInt(s, "width");
                     height = ReadInt(s, "height");
                     rotation = ReadRotation(s);
                     if (duration <= 0) duration = ReadDuration(s);
                 }
+            }
+
+            if (kind == MediaKind.Audio)
+            {
+                // Audio: no picture needed, but there must be a sound track
+                if (!hasAudio) throw new VideoProcessingException("No audio stream found in the file.");
+                return new ProbeResult(0, 0, duration, true, hasCover);
             }
 
             if (width <= 0 || height <= 0)

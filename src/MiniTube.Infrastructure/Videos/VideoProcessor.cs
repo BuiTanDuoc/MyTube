@@ -23,7 +23,11 @@ public class VideoProcessor : IVideoProcessor
         (360, 800, 96)
     ];
 
+    // Audio ladder (kbps). Renditions are named "128k" / "64k" and carry no picture.
+    private static readonly int[] AudioLadder = [128, 64];
+
     private const int SegmentSeconds = 4;
+    private const int AudioSegmentSeconds = 10;
 
     private sealed record RenditionPlan(string Name, int Width, int Height, int VideoKbps, int AudioKbps);
 
@@ -106,7 +110,7 @@ public class VideoProcessor : IVideoProcessor
             throw new VideoProcessingException("The uploaded file is missing.");
 
         // 1. Inspect
-        var probe = await _ffmpeg.ProbeAsync(sourceFile, ct);
+        var probe = await _ffmpeg.ProbeAsync(sourceFile, video.Kind, ct);
         if (probe.DurationSeconds > _o.MaxDurationMinutes * 60.0)
             throw new VideoProcessingException($"Videos longer than {_o.MaxDurationMinutes} minutes are not supported.");
         await SetProgressAsync(video.Id, 5, ct);
@@ -116,6 +120,13 @@ public class VideoProcessor : IVideoProcessor
         var hlsDir = _paths.VideoHlsDir(video.Id);
         var publicDir = _paths.VideoPublicDir(video.Id);
         Directory.CreateDirectory(hlsDir);
+
+        if (video.Kind == MediaKind.Audio)
+        {
+            await RunAudioPipelineAsync(video, sourceFile, probe, hlsDir, publicDir, ct);
+            return;
+        }
+
         Directory.CreateDirectory(publicDir);
 
         // 2. Thumbnail (16:9, letterboxed, ~25% into the video)
@@ -161,19 +172,79 @@ public class VideoProcessor : IVideoProcessor
             : SumPlaylistDuration(Path.Combine(hlsDir, plans[0].Name, "index.m3u8"));
 
         // 5. Persist
+        await CompleteAsync(video, renditions, duration, probe.Width, probe.Height, _paths.VideoThumbUrl(video.Id), ct);
+    }
+
+    /// <summary>Audio: optional cover art as thumbnail, then audio-only HLS at a few bitrates.</summary>
+    private async Task RunAudioPipelineAsync(
+        Video video, string sourceFile, ProbeResult probe, string hlsDir, string publicDir, CancellationToken ct)
+    {
+        // 2. Cover art (optional: many files have none, the UI shows a placeholder)
+        string? thumbUrl = null;
+        if (probe.HasCoverArt)
+        {
+            Directory.CreateDirectory(publicDir);
+            var thumbFile = Path.Combine(publicDir, "thumb.jpg");
+            try { await _ffmpeg.RunFfmpegAsync(CoverArgs(sourceFile, thumbFile), ct); }
+            catch (VideoProcessingException) { /* a broken cover must not fail the whole file */ }
+
+            if (File.Exists(thumbFile)) thumbUrl = _paths.VideoThumbUrl(video.Id);
+            else TryDeleteDirectory(publicDir);
+        }
+        await SetProgressAsync(video.Id, 10, ct);
+
+        // 3. One audio-only HLS variant per bitrate
+        var plans = AudioLadder.OrderBy(k => k).ToList();
+        var renditions = new List<VideoRendition>();
+        for (var i = 0; i < plans.Count; i++)
+        {
+            var kbps = plans[i];
+            var name = $"{kbps}k";
+            var dir = Path.Combine(hlsDir, name);
+            Directory.CreateDirectory(dir);
+
+            await _ffmpeg.RunFfmpegAsync(AudioHlsArgs(sourceFile, dir, kbps), ct);
+
+            renditions.Add(new VideoRendition
+            {
+                VideoId = video.Id,
+                Name = name,
+                Width = 0,
+                Height = 0,
+                VideoBitrateKbps = 0,
+                AudioBitrateKbps = kbps,
+                SizeBytes = new DirectoryInfo(dir).EnumerateFiles().Sum(f => f.Length)
+            });
+
+            await SetProgressAsync(video.Id, 10 + (int)(85.0 * (i + 1) / plans.Count), ct);
+        }
+
+        // 4. Master playlist (lowest first)
+        await File.WriteAllTextAsync(Path.Combine(hlsDir, "master.m3u8"), BuildAudioMasterPlaylist(plans), new UTF8Encoding(false), ct);
+
+        var duration = probe.DurationSeconds > 0
+            ? probe.DurationSeconds
+            : SumPlaylistDuration(Path.Combine(hlsDir, $"{plans[0]}k", "index.m3u8"));
+
+        await CompleteAsync(video, renditions, duration, 0, 0, thumbUrl, ct);
+    }
+
+    /// <summary>Saves renditions, marks the item Ready and optionally drops the original.</summary>
+    private async Task CompleteAsync(
+        Video video, List<VideoRendition> renditions, double duration, int width, int height, string? thumbUrl, CancellationToken ct)
+    {
         await _db.VideoRenditions.Where(r => r.VideoId == video.Id).ExecuteDeleteAsync(ct);
         _db.VideoRenditions.AddRange(renditions);
         await _db.SaveChangesAsync(ct);
 
         DateTime? finished = DateTime.UtcNow;
-        var thumbUrl = _paths.VideoThumbUrl(video.Id);
         await _db.Videos.Where(v => v.Id == video.Id).ExecuteUpdateAsync(s => s
             .SetProperty(v => v.Status, VideoStatus.Ready)
             .SetProperty(v => v.ProcessingProgress, 100)
             .SetProperty(v => v.ProcessingError, (string?)null)
             .SetProperty(v => v.DurationSeconds, duration)
-            .SetProperty(v => v.Width, probe.Width)
-            .SetProperty(v => v.Height, probe.Height)
+            .SetProperty(v => v.Width, width)
+            .SetProperty(v => v.Height, height)
             .SetProperty(v => v.ThumbnailUrl, thumbUrl)
             .SetProperty(v => v.PublishedAt, video.PublishedAt ?? finished)
             .SetProperty(v => v.UpdatedAt, finished), ct);
@@ -198,6 +269,37 @@ public class VideoProcessor : IVideoProcessor
         "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2:black",
         "-q:v", "3",
         output
+    ];
+
+    /// <summary>Album art -> 16:9 thumbnail: the picture centred over a blurred, enlarged copy of itself.</summary>
+    private static List<string> CoverArgs(string source, string output) =>
+    [
+        "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+        "-protocol_whitelist", "file",
+        "-i", source,
+        "-map", "0:v:0",
+        "-frames:v", "1",
+        "-vf", "split[a][b];" +
+               "[a]scale=640:360:force_original_aspect_ratio=increase,crop=640:360,boxblur=20:2[bg];" +
+               "[b]scale=640:360:force_original_aspect_ratio=decrease[fg];" +
+               "[bg][fg]overlay=(W-w)/2:(H-h)/2",
+        "-q:v", "3",
+        output
+    ];
+
+    private static List<string> AudioHlsArgs(string source, string outDir, int kbps) =>
+    [
+        "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+        "-protocol_whitelist", "file",
+        "-i", source,
+        "-map", "0:a:0", "-vn", "-sn", "-dn",
+        "-c:a", "aac", "-b:a", $"{kbps}k", "-ac", "2", "-ar", "44100",
+        "-f", "hls",
+        "-hls_time", AudioSegmentSeconds.ToString(CultureInfo.InvariantCulture),
+        "-hls_playlist_type", "vod",
+        "-hls_flags", "independent_segments",
+        "-hls_segment_filename", Path.Combine(outDir, "seg_%05d.ts"),
+        Path.Combine(outDir, "index.m3u8")
     ];
 
     private List<string> HlsArgs(string source, string outDir, RenditionPlan p)
@@ -258,6 +360,18 @@ public class VideoProcessor : IVideoProcessor
             var bandwidth = (p.VideoKbps + p.AudioKbps) * 1000;
             sb.Append($"#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},RESOLUTION={p.Width}x{p.Height},NAME=\"{p.Name}\"\n");
             sb.Append($"{p.Name}/index.m3u8\n");
+        }
+        return sb.ToString();
+    }
+
+    private static string BuildAudioMasterPlaylist(IEnumerable<int> kbpsLadder)
+    {
+        var sb = new StringBuilder();
+        sb.Append("#EXTM3U\n#EXT-X-VERSION:3\n");
+        foreach (var kbps in kbpsLadder.OrderBy(k => k))
+        {
+            sb.Append($"#EXT-X-STREAM-INF:BANDWIDTH={kbps * 1000},CODECS=\"mp4a.40.2\",NAME=\"{kbps}k\"\n");
+            sb.Append($"{kbps}k/index.m3u8\n");
         }
         return sb.ToString();
     }

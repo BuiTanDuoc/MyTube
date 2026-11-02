@@ -12,7 +12,7 @@ public class VideoStreamService : IVideoStreamService
 {
     // Whitelist: nothing but the files the processor creates. This is also the path-traversal guard.
     private static readonly Regex AllowedPath = new(
-        @"^(master\.m3u8|[0-9]{2,4}p/index\.m3u8|[0-9]{2,4}p/seg_[0-9]{5,}\.ts)\z",
+        @"^(master\.m3u8|[0-9]{2,4}[pk]/index\.m3u8|[0-9]{2,4}[pk]/seg_[0-9]{5,}\.ts)\z",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly AppDbContext _db;

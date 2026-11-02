@@ -1,3 +1,4 @@
+export type MediaKind = 'Video' | 'Audio';
 export type Visibility = 'Private' | 'Unlisted' | 'Public';
 export type VideoStatus = 'PendingUpload' | 'Uploading' | 'Queued' | 'Processing' | 'Ready' | 'Failed';
 export type ReactionType = 'Like' | 'Dislike';
@@ -52,6 +53,7 @@ export interface Rendition {
 
 export interface VideoDto {
   id: string;
+  kind: MediaKind;
   title: string;
   description: string | null;
   visibility: Visibility;
@@ -77,6 +79,7 @@ export interface VideoDto {
 
 export interface VideoListItem {
   id: string;
+  kind: MediaKind;
   title: string;
   thumbnailUrl: string | null;
   durationSeconds: number;
@@ -132,6 +135,10 @@ export interface VideoInput {
   title: string;
   description: string | null;
   visibility: Visibility;
+}
+
+export interface VideoCreateInput extends VideoInput {
+  kind: MediaKind;
 }
 
 export type PlaylistKind = 'Custom' | 'WatchLater';

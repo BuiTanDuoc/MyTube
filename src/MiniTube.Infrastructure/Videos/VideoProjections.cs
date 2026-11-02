@@ -10,6 +10,7 @@ public static class VideoProjections
     public static readonly Expression<Func<Video, VideoListItemDto>> ListItem = v => new VideoListItemDto
     {
         Id = v.Id,
+        Kind = v.Kind,
         Title = v.Title,
         ThumbnailUrl = v.ThumbnailUrl,
         DurationSeconds = v.DurationSeconds,

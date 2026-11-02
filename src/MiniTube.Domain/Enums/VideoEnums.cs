@@ -1,5 +1,11 @@
 namespace MiniTube.Domain.Enums;
 
+public enum MediaKind
+{
+    Video = 0,
+    Audio = 1 // mp3, m4a, flac... converted to audio-only HLS
+}
+
 public enum VideoVisibility
 {
     Private = 0,   // owner (and admins) only

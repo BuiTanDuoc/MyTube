@@ -16,7 +16,7 @@
     "home": "Trang chủ",
     "trending": "Thịnh hành",
     "you": "Bạn",
-    "studio": "Video của bạn",
+    "studio": "Thư viện của bạn",
     "upload": "Tải lên",
     "signIn": "Đăng nhập",
     "signOut": "Đăng xuất",
@@ -25,7 +25,8 @@
     "history": "Video đã xem",
     "playlists": "Danh sách phát",
     "liked": "Video đã thích",
-    "admin": "Quản trị"
+    "admin": "Quản trị",
+    "audio": "Âm thanh"
   },
   "settings": {
     "theme": "Giao diện",
@@ -175,13 +176,13 @@
     "resetDone": "Đã đổi mật khẩu. Vui lòng đăng nhập."
   },
   "upload": {
-    "title": "Tải video lên",
+    "title": "Tải video hoặc âm thanh lên",
     "verifyTitle": "Hãy xác nhận email để tải video lên",
     "verifyText": "Chúng tôi đã gửi liên kết xác nhận đến {{email}}. Hãy mở liên kết đó rồi quay lại đây.",
     "iConfirmed": "Tôi đã xác nhận",
     "stillUnverified": "Email của bạn vẫn chưa được xác nhận.",
-    "drop": "Kéo video vào đây hoặc bấm để chọn",
-    "dropHint": "{{types}} · tối đa {{size}}",
+    "drop": "Kéo video hoặc tệp âm thanh vào đây, hoặc bấm để chọn",
+    "dropHint": "Video: {{videoTypes}} (tối đa {{videoSize}}) · Âm thanh: {{audioTypes}} (tối đa {{audioSize}})",
     "badType": "Định dạng tệp không được hỗ trợ. Chấp nhận: {{types}}",
     "tooLarge": "Tệp lớn hơn {{size}}.",
     "changeFile": "Đổi tệp",
@@ -198,16 +199,18 @@
     "watch": "Xem video",
     "another": "Tải lên video khác",
     "failed": "Tải lên thất bại",
-    "processingFailed": "Không thể xử lý video này."
+    "processingFailed": "Không thể xử lý tệp này.",
+    "readyAudio": "Âm thanh của bạn đã sẵn sàng",
+    "listen": "Nghe âm thanh"
   },
   "studio": {
-    "title": "Video của bạn",
-    "empty": "Bạn chưa tải video nào lên",
-    "emptyHint": "Hãy tải video đầu tiên lên để thấy nó ở đây.",
-    "editTitle": "Chỉnh sửa video",
-    "deleteTitle": "Xóa video?",
+    "title": "Thư viện của bạn",
+    "empty": "Bạn chưa tải gì lên",
+    "emptyHint": "Hãy tải video hoặc âm thanh đầu tiên lên để thấy nó ở đây.",
+    "editTitle": "Chỉnh sửa thông tin",
+    "deleteTitle": "Xóa mục này?",
     "deleteConfirm": "“{{title}}” sẽ bị xóa vĩnh viễn, cùng với lượt thích và lịch sử xem.",
-    "deleted": "Đã xóa video.",
+    "deleted": "Đã xóa.",
     "saved": "Đã lưu thay đổi.",
     "reprocess": "Xử lý lại"
   },
@@ -286,5 +289,16 @@
     "reindex": "Dựng lại chỉ mục tìm kiếm",
     "reindexHint": "Tính lại văn bản tìm kiếm không dấu của mọi video và người dùng",
     "reindexed": "Đã dựng lại chỉ mục: {{videos}} video, {{users}} người dùng."
+  },
+  "kind": {
+    "all": "Tất cả",
+    "Video": "Video",
+    "Audio": "Âm thanh",
+    "filter": "Loại nội dung"
+  },
+  "audio": {
+    "title": "Âm thanh",
+    "empty": "Chưa có âm thanh nào",
+    "emptyHint": "Các bản âm thanh công khai sẽ hiện ở đây."
   }
 }

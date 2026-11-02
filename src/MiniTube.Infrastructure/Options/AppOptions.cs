@@ -42,6 +42,10 @@ public class VideoOptions
     public long MaxUploadBytes { get; set; } = 2L * 1024 * 1024 * 1024; // 2 GB
     public string[] AllowedExtensions { get; set; } = [".mp4", ".mov", ".m4v", ".mkv", ".webm", ".avi"];
 
+    // ---- audio
+    public long MaxAudioUploadBytes { get; set; } = 500L * 1024 * 1024; // 500 MB
+    public string[] AllowedAudioExtensions { get; set; } = [".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".oga", ".opus", ".wma"];
+
     /// <summary>"ffmpeg" works when it is on PATH; otherwise put the full path to ffmpeg.exe here.</summary>
     public string FfmpegPath { get; set; } = "ffmpeg";
     public string FfprobePath { get; set; } = "ffprobe";

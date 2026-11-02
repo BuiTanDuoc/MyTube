@@ -87,6 +87,28 @@ Content-Type: application/octet-stream
 GET {{host}}/api/videos/PASTE_VIDEO_ID
 Authorization: Bearer PASTE_ACCESS_TOKEN
 
+### ---- Audio ----
+### 1) Create an audio item (kind = Audio)
+POST {{host}}/api/videos
+Authorization: Bearer PASTE_ACCESS_TOKEN
+Content-Type: application/json
+
+{ "title": "My first song", "description": "Hello", "visibility": "Public", "kind": "Audio" }
+
+### 2) Upload the audio file as the raw body (.mp3 .m4a .aac .wav .flac .ogg .oga .opus .wma)
+PUT {{host}}/api/videos/PASTE_AUDIO_ID/source?fileName=song.mp3
+Authorization: Bearer PASTE_ACCESS_TOKEN
+Content-Type: application/octet-stream
+
+< ./song.mp3
+
+### Public audio only (use kind=Video for videos only; omit for both)
+GET {{host}}/api/videos?kind=Audio&page=1&pageSize=20
+
+### My audio (all statuses)
+GET {{host}}/api/videos/mine?kind=Audio
+Authorization: Bearer PASTE_ACCESS_TOKEN
+
 ### Public list
 GET {{host}}/api/videos?page=1&pageSize=20
 

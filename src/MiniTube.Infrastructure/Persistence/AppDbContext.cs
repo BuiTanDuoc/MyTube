@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MiniTube.Domain.Entities;
+using MiniTube.Domain.Enums;
 
 namespace MiniTube.Infrastructure.Persistence;
 
@@ -50,6 +51,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             e.Property(x => x.Description).HasMaxLength(5000);
             e.Property(x => x.Visibility).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10).HasDefaultValue(MediaKind.Video);
             e.Property(x => x.OriginalFileName).HasMaxLength(260);
             e.Property(x => x.SourcePath).HasMaxLength(500);
             e.Property(x => x.ThumbnailUrl).HasMaxLength(500);
@@ -61,6 +63,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             e.HasIndex(x => x.Status);
             e.HasIndex(x => new { x.OwnerId, x.CreatedAt });
             e.HasIndex(x => new { x.Visibility, x.Status, x.PublishedAt });
+            e.HasIndex(x => new { x.Kind, x.Visibility, x.Status, x.PublishedAt });
 
             // Deleting a user must be an explicit decision (files on disk need cleaning up too)
             e.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Restrict);

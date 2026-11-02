@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Film } from 'lucide-react';
+import { Film, Music } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { VideoListItem } from '../api/types';
 import { formatDuration, useFormatters } from '../lib/format';
@@ -7,13 +7,17 @@ import { apiUrl } from '../lib/url';
 import Avatar from './Avatar';
 
 export function VideoThumb({ video, progress, to }: { video: VideoListItem; progress?: number; to?: string }) {
+  const { t } = useTranslation();
   return (
     <Link to={to ?? `/watch/${video.id}`} className="vthumb" tabIndex={-1} aria-hidden="true">
       {video.thumbnailUrl ? (
         <img src={apiUrl(video.thumbnailUrl)} alt="" loading="lazy" />
       ) : (
-        <span className="vthumb__placeholder">
-          <Film size={36} />
+        <span className="vthumb__placeholder">{video.kind === 'Audio' ? <Music size={36} /> : <Film size={36} />}</span>
+      )}
+      {video.kind === 'Audio' && (
+        <span className="vthumb__tag vthumb__kind">
+          <Music size={12} aria-hidden="true" /> {t('kind.Audio')}
         </span>
       )}
       {video.durationSeconds > 0 && <span className="vthumb__duration">{formatDuration(video.durationSeconds)}</span>}

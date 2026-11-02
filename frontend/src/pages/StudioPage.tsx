@@ -5,7 +5,7 @@ import { Clapperboard, Pencil, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { videosApi } from '../api/endpoints';
 import { parseError } from '../api/errors';
-import type { VideoListItem, VideoStatus, Visibility } from '../api/types';
+import type { MediaKind, VideoListItem, VideoStatus, Visibility } from '../api/types';
 import Dialog from '../components/Dialog';
 import EmptyState from '../components/EmptyState';
 import Spinner from '../components/Spinner';
@@ -32,6 +32,7 @@ export default function StudioPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
+  const [kind, setKind] = useState<MediaKind | undefined>(undefined); // undefined = everything
   const [editId, setEditId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<VideoListItem | null>(null);
 
@@ -40,8 +41,8 @@ export default function StudioPage() {
   }, [t]);
 
   const list = useInfiniteQuery({
-    queryKey: ['mine'],
-    queryFn: ({ pageParam }) => videosApi.mine(pageParam),
+    queryKey: ['mine', kind ?? 'all'],
+    queryFn: ({ pageParam }) => videosApi.mine(pageParam, undefined, kind),
     initialPageParam: 1,
     getNextPageParam: nextPage,
     // Keep conversions up to date while something is being processed
@@ -81,6 +82,14 @@ export default function StudioPage() {
         </Link>
       </div>
 
+      <div className="chips" role="group" aria-label={t('kind.filter')} style={{ marginBottom: 16 }}>
+        {([undefined, 'Video', 'Audio'] as const).map((k) => (
+          <button key={k ?? 'all'} className="chip" aria-pressed={kind === k} onClick={() => setKind(k)}>
+            {k ? t(`kind.${k}`) : t('kind.all')}
+          </button>
+        ))}
+      </div>
+
       {list.isPending && <Spinner />}
 
       {list.isError && (
@@ -117,6 +126,7 @@ export default function StudioPage() {
                 {v.status === 'Ready' ? <Link to={`/watch/${v.id}`}>{v.title}</Link> : v.title}
               </div>
               <div className="studio-row__meta">
+                {v.kind === 'Audio' && <span className="badge">{t('kind.Audio')}</span>}
                 <span className={statusClass(v.status)}>{t(`status.${v.status}`)}</span>
                 <span className="badge">{t(`visibility.${v.visibility}`)}</span>
                 {v.status === 'Ready' && <span>{viewsText(v.viewCount)}</span>}

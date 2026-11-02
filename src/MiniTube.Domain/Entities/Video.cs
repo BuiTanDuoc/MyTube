@@ -9,6 +9,9 @@ public class Video
     public Guid OwnerId { get; set; }
     public ApplicationUser Owner { get; set; } = null!;
 
+    /// <summary>Video or Audio. Audio items reuse the whole pipeline (queue, HLS, playlists, history, search).</summary>
+    public MediaKind Kind { get; set; } = MediaKind.Video;
+
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public VideoVisibility Visibility { get; set; } = VideoVisibility.Private;

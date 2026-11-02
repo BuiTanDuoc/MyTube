@@ -9,6 +9,7 @@ public static class VideoMapping
     public static VideoDto ToDto(this Video v, bool includePrivateFields) => new()
     {
         Id = v.Id,
+        Kind = v.Kind,
         Title = v.Title,
         Description = v.Description,
         Visibility = v.Visibility,

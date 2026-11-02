@@ -44,6 +44,7 @@ export const owner = { id: 'o1', userName: 'owner', displayName: 'Owner Name', a
 
 export const videoItem = (id: string, title: string) => ({
   id,
+  kind: 'Video',
   title,
   thumbnailUrl: null,
   durationSeconds: 125,

@@ -50,7 +50,7 @@ public class VideosController : ControllerBase
         // Kestrel's default body limit is ~28 MB; lift it for this endpoint only.
         var feature = HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
         if (feature is { IsReadOnly: false })
-            feature.MaxRequestBodySize = _options.MaxUploadBytes + 1024 * 1024;
+            feature.MaxRequestBodySize = Math.Max(_options.MaxUploadBytes, _options.MaxAudioUploadBytes) + 1024 * 1024;
 
         var dto = await _videos.UploadSourceAsync(
             User.GetUserId(), id, fileName, Request.ContentLength, Request.Body, ct);

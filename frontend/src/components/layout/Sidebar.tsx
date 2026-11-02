@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, Flame, History, House, ListVideo, ThumbsUp, Upload, Users } from 'lucide-react';
+import { Clapperboard, Flame, History, House, ListVideo, Music, ThumbsUp, Upload, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 
@@ -17,7 +17,8 @@ export default function Sidebar({ open, onNavigate }: Props) {
 
   const items = [
     { to: '/', icon: House, label: t('nav.home'), active: pathname === '/' && tab !== 'trending' },
-    { to: '/?tab=trending', icon: Flame, label: t('nav.trending'), active: pathname === '/' && tab === 'trending' }
+    { to: '/?tab=trending', icon: Flame, label: t('nav.trending'), active: pathname === '/' && tab === 'trending' },
+    { to: '/audio', icon: Music, label: t('nav.audio'), active: pathname === '/audio' }
   ];
 
   const mine = [

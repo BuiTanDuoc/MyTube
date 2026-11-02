@@ -12,6 +12,9 @@ public class CreateVideoRequest
     public string? Description { get; set; }
 
     public VideoVisibility Visibility { get; set; } = VideoVisibility.Private;
+
+    /// <summary>Video (default) or Audio. Decides which file types the upload accepts.</summary>
+    public MediaKind Kind { get; set; } = MediaKind.Video;
 }
 
 public class UpdateVideoRequest
@@ -44,6 +47,7 @@ public class RenditionDto
 public class VideoDto
 {
     public Guid Id { get; set; }
+    public MediaKind Kind { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public VideoVisibility Visibility { get; set; }
@@ -83,6 +87,7 @@ public class VideoDto
 public class VideoListItemDto
 {
     public Guid Id { get; set; }
+    public MediaKind Kind { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? ThumbnailUrl { get; set; }
     public double DurationSeconds { get; set; }
@@ -105,6 +110,9 @@ public class VideoListQuery
 
     /// <summary>"Mine" list: filter by status.</summary>
     public VideoStatus? Status { get; set; }
+
+    /// <summary>Only videos or only audio (null = both).</summary>
+    public MediaKind? Kind { get; set; }
 }
 
 public record StreamFileResult(string PhysicalPath, string ContentType, bool IsPrivate);

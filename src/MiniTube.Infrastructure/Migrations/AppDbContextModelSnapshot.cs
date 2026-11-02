@@ -409,6 +409,13 @@ namespace MiniTube.Infrastructure.Migrations
                     b.Property<int>("Height")
                         .HasColumnType("int");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("Video");
+
                     b.Property<int>("LikeCount")
                         .HasColumnType("int");
 
@@ -487,6 +494,8 @@ namespace MiniTube.Infrastructure.Migrations
                     b.HasIndex("OwnerId", "CreatedAt");
 
                     b.HasIndex("Visibility", "Status", "PublishedAt");
+
+                    b.HasIndex("Kind", "Visibility", "Status", "PublishedAt");
 
                     b.ToTable("Videos", (string)null);
                 });

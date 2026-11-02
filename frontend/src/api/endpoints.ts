@@ -19,7 +19,9 @@ import type {
   UploadDateFilter,
   UserDto,
   VideoDto,
+  VideoCreateInput,
   VideoInput,
+  MediaKind,
   VideoListItem,
   VideoStatus,
   ViewResult,
@@ -45,7 +47,7 @@ export const usersApi = {
 };
 
 export const videosApi = {
-  create: (body: VideoInput) => api.post<VideoDto>('/api/videos', body).then((r) => r.data),
+  create: (body: VideoCreateInput) => api.post<VideoDto>('/api/videos', body).then((r) => r.data),
 
   /** Raw file as the request body (not multipart); the API streams it to disk. */
   upload: (id: string, file: File, onProgress: (fraction: number) => void, signal?: AbortSignal) =>
@@ -61,10 +63,10 @@ export const videosApi = {
       .then((r) => r.data),
 
   get: (id: string) => api.get<VideoDto>(`/api/videos/${id}`).then((r) => r.data),
-  list: (page: number, ownerId?: string) =>
-    api.get<Paged<VideoListItem>>('/api/videos', { params: { page, pageSize: 24, ownerId } }).then((r) => r.data),
-  mine: (page: number, status?: VideoStatus) =>
-    api.get<Paged<VideoListItem>>('/api/videos/mine', { params: { page, pageSize: 20, status } }).then((r) => r.data),
+  list: (page: number, ownerId?: string, kind?: MediaKind) =>
+    api.get<Paged<VideoListItem>>('/api/videos', { params: { page, pageSize: 24, ownerId, kind } }).then((r) => r.data),
+  mine: (page: number, status?: VideoStatus, kind?: MediaKind) =>
+    api.get<Paged<VideoListItem>>('/api/videos/mine', { params: { page, pageSize: 20, status, kind } }).then((r) => r.data),
   update: (id: string, body: VideoInput) => api.put<VideoDto>(`/api/videos/${id}`, body).then((r) => r.data),
   remove: (id: string) => api.delete(`/api/videos/${id}`),
   reprocess: (id: string) => api.post<VideoDto>(`/api/videos/${id}/reprocess`).then((r) => r.data),

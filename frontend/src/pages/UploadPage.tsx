@@ -2,18 +2,18 @@ import { DragEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, FileVideo, TriangleAlert, UploadCloud } from 'lucide-react';
+import { CheckCircle2, FileAudio, FileVideo, TriangleAlert, UploadCloud } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { refreshSession } from '../api/client';
 import { authApi, videosApi } from '../api/endpoints';
 import { parseError } from '../api/errors';
-import type { Visibility } from '../api/types';
+import type { MediaKind, Visibility } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 import { formatBytes } from '../lib/format';
+import { AUDIO_EXTENSIONS, kindOfFile, MAX_AUDIO_BYTES, MAX_VIDEO_BYTES, maxBytesFor, VIDEO_EXTENSIONS } from '../lib/media';
 
-const ALLOWED = ['.mp4', '.mov', '.m4v', '.mkv', '.webm', '.avi'];
-const MAX_BYTES = 2 * 1024 * 1024 * 1024; // keep in sync with Video:MaxUploadBytes on the API
+const ALLOWED = [...VIDEO_EXTENSIONS, ...AUDIO_EXTENSIONS];
 
 type Phase = 'form' | 'uploading' | 'processing' | 'done' | 'error';
 
@@ -23,6 +23,7 @@ export default function UploadPage() {
   const toast = useToast();
 
   const [file, setFile] = useState<File | null>(null);
+  const [kind, setKind] = useState<MediaKind>('Video'); // derived from the chosen file
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('Private');
@@ -70,15 +71,16 @@ export default function UploadPage() {
     setFileError(null);
     if (!f) return;
 
-    const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-    if (!ALLOWED.includes(ext)) {
+    const detected = kindOfFile(f.name);
+    if (!detected) {
       setFileError(t('upload.badType', { types: ALLOWED.join(', ') }));
       return;
     }
-    if (f.size > MAX_BYTES) {
-      setFileError(t('upload.tooLarge', { size: formatBytes(MAX_BYTES) }));
+    if (f.size > maxBytesFor(detected)) {
+      setFileError(t('upload.tooLarge', { size: formatBytes(maxBytesFor(detected)) }));
       return;
     }
+    setKind(detected);
     setFile(f);
     if (!title.trim()) setTitle(f.name.replace(/\.[^.]+$/, '').slice(0, 200));
   };
@@ -101,7 +103,7 @@ export default function UploadPage() {
     try {
       let id = videoId;
       if (!id) {
-        const created = await videosApi.create({ title: title.trim(), description: description.trim() || null, visibility });
+        const created = await videosApi.create({ title: title.trim(), description: description.trim() || null, visibility, kind });
         id = created.id;
         setVideoId(id);
       }
@@ -119,6 +121,7 @@ export default function UploadPage() {
 
   const reset = () => {
     setFile(null);
+    setKind('Video');
     setTitle('');
     setDescription('');
     setVisibility('Private');
@@ -177,12 +180,12 @@ export default function UploadPage() {
         <div className="upload-status" role="status">
           <div className="upload-status__row">
             <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              <CheckCircle2 color="var(--success)" /> <strong>{t('upload.ready')}</strong>
+              <CheckCircle2 color="var(--success)" /> <strong>{kind === 'Audio' ? t('upload.readyAudio') : t('upload.ready')}</strong>
             </span>
           </div>
           <div className="form-actions" style={{ justifyContent: 'flex-start' }}>
             <Link to={`/watch/${videoId}`} className="btn btn--primary">
-              {t('upload.watch')}
+              {kind === 'Audio' ? t('upload.listen') : t('upload.watch')}
             </Link>
             <Link to="/studio" className="btn">
               {t('nav.studio')}
@@ -206,6 +209,17 @@ export default function UploadPage() {
 
           {!file ? (
             <>
+              <input
+                ref={inputRef}
+                type="file"
+                hidden
+                accept={ALLOWED.join(',')}
+                data-testid="file-input"
+                onChange={(e) => {
+                  chooseFile(e.target.files?.[0] ?? null);
+                  e.target.value = ''; // lets the same file be picked again after an error
+                }}
+              />
               <div
                 className={`dropzone ${dragging ? 'is-over' : ''}`}
                 onClick={() => inputRef.current?.click()}
@@ -223,7 +237,14 @@ export default function UploadPage() {
               >
                 <UploadCloud size={44} />
                 <strong>{t('upload.drop')}</strong>
-                <span>{t('upload.dropHint', { types: ALLOWED.join(' '), size: formatBytes(MAX_BYTES) })}</span>
+                <span>
+                  {t('upload.dropHint', {
+                    videoTypes: VIDEO_EXTENSIONS.join(' '),
+                    videoSize: formatBytes(MAX_VIDEO_BYTES),
+                    audioTypes: AUDIO_EXTENSIONS.join(' '),
+                    audioSize: formatBytes(MAX_AUDIO_BYTES)
+                  })}
+                </span>
               </div>
               {fileError && <p className="field__error" style={{ marginTop: -12, marginBottom: 16 }}>{fileError}</p>}
             </>
@@ -231,7 +252,7 @@ export default function UploadPage() {
             <div className="upload-status" style={{ marginBottom: 20 }}>
               <div className="upload-status__row">
                 <span style={{ display: 'inline-flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
-                  <FileVideo size={28} style={{ flex: 'none' }} />
+                  {kind === 'Audio' ? <FileAudio size={28} style={{ flex: 'none' }} /> : <FileVideo size={28} style={{ flex: 'none' }} />}
                   <span style={{ overflowWrap: 'anywhere' }}>
                     <strong>{file.name}</strong>
                     <br />

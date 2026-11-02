@@ -39,9 +39,13 @@ public class VideoService : IVideoService
 
     public async Task<VideoDto> CreateAsync(Guid ownerId, CreateVideoRequest request, CancellationToken ct = default)
     {
+        if (!Enum.IsDefined(request.Kind))
+            throw AppException.BadRequest("Unknown media kind. Use Video or Audio.");
+
         var video = new Video
         {
             OwnerId = ownerId,
+            Kind = request.Kind,
             Title = request.Title.Trim(),
             Description = Clean(request.Description),
             Visibility = request.Visibility
@@ -58,18 +62,22 @@ public class VideoService : IVideoService
     {
         var info = await _db.Videos.AsNoTracking()
             .Where(v => v.Id == videoId)
-            .Select(v => new { v.OwnerId, v.Status })
+            .Select(v => new { v.OwnerId, v.Status, v.Kind })
             .SingleOrDefaultAsync(ct);
 
         if (info is null || info.OwnerId != ownerId)
             throw AppException.NotFound("Video not found");
 
-        var ext = Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
-        if (!_o.AllowedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
-            throw AppException.BadRequest("Unsupported file type. Allowed: " + string.Join(", ", _o.AllowedExtensions));
+        var isAudio = info.Kind == MediaKind.Audio;
+        var allowed = isAudio ? _o.AllowedAudioExtensions : _o.AllowedExtensions;
+        var maxBytes = isAudio ? _o.MaxAudioUploadBytes : _o.MaxUploadBytes;
 
-        if (contentLength is > 0 && contentLength > _o.MaxUploadBytes)
-            throw AppException.PayloadTooLarge($"The file is larger than {FormatBytes(_o.MaxUploadBytes)}.");
+        var ext = Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+        if (!allowed.Contains(ext, StringComparer.OrdinalIgnoreCase))
+            throw AppException.BadRequest("Unsupported file type. Allowed: " + string.Join(", ", allowed));
+
+        if (contentLength is > 0 && contentLength > maxBytes)
+            throw AppException.PayloadTooLarge($"The file is larger than {FormatBytes(maxBytes)}.");
 
         var previousStatus = info.Status == VideoStatus.Failed ? VideoStatus.Failed : VideoStatus.PendingUpload;
 
@@ -99,8 +107,8 @@ public class VideoService : IVideoService
                     while ((read = await body.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
                     {
                         total += read;
-                        if (total > _o.MaxUploadBytes)
-                            throw AppException.PayloadTooLarge($"The file is larger than {FormatBytes(_o.MaxUploadBytes)}.");
+                        if (total > maxBytes)
+                            throw AppException.PayloadTooLarge($"The file is larger than {FormatBytes(maxBytes)}.");
                         await fs.WriteAsync(buffer.AsMemory(0, read), ct);
                     }
                 }
@@ -183,6 +191,7 @@ public class VideoService : IVideoService
             .Where(v => v.Status == VideoStatus.Ready && v.Visibility == VideoVisibility.Public);
 
         if (query.OwnerId is { } owner) q = q.Where(v => v.OwnerId == owner);
+        if (query.Kind is { } kind) q = q.Where(v => v.Kind == kind);
 
         return PageAsync(q.OrderByDescending(v => v.PublishedAt), query, ct);
     }
@@ -191,6 +200,7 @@ public class VideoService : IVideoService
     {
         var q = _db.Videos.AsNoTracking().Where(v => v.OwnerId == ownerId);
         if (query.Status is { } status) q = q.Where(v => v.Status == status);
+        if (query.Kind is { } kind) q = q.Where(v => v.Kind == kind);
 
         return PageAsync(q.OrderByDescending(v => v.CreatedAt), query, ct);
     }

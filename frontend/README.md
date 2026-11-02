@@ -32,7 +32,8 @@ Production: serve `dist/` and `/api` + `/media` from the same origin (reverse pr
 - **Home**: "For you" (personalised after you like/watch things) / Popular, Trending (day/week/month), "Continue watching" row, infinite scroll.
 - **Watch page**: HLS player with quality menu (Auto/1080p/...), resume, progress heartbeat, view counting, likes, related list with autoplay-next, expandable description, live processing status for the owner.
 - **Search**: results with sort / upload date / duration filters, channel hits, suggestions.
-- **Upload**: drag and drop, upload progress, then live processing progress; blocks unverified emails with a resend button.
+- **Upload**: drag and drop or click to choose (video **or audio**: the kind is detected from the extension), upload progress, then live processing progress; blocks unverified emails with a resend button.
+- **Audio**: `/audio` lists public audio; the watch page plays it in the same player (`<audio>` + cover art, lock-screen controls via Media Session); "Your library" (`/studio`) has an All / Video / Audio filter.
 - **Your videos** (studio): status, progress, edit, delete, reprocess failed videos.
 - **Channel page**.
 - **Watch history**: resume position bars, remove one / clear all, pause recording.
@@ -62,7 +63,7 @@ Production: serve `dist/` and `/api` + `/media` from the same origin (reverse pr
 ## Routes
 
 `/` home, `/watch/:id[?list=:playlistId]`, `/results?q=`, `/channel/:id`, `/playlist/:id`,
-`/history`, `/liked`, `/playlists`, `/upload`, `/studio`, `/settings`, `/admin/users`,
+`/audio`, `/history`, `/liked`, `/playlists`, `/upload`, `/studio`, `/settings`, `/admin/users`,
 `/login`, `/register`, `/forgot-password`, `/reset-password`, `/confirm-email`.
 
 ## Next

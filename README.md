@@ -91,6 +91,20 @@ curl -k -X PUT "https://localhost:7100/api/videos/<id>/source?fileName=test.mp4"
 - Statuses: `PendingUpload -> Uploading -> Queued -> Processing -> Ready | Failed`.
 - The database is the source of truth: after a crash/restart, `Processing` videos are re-queued automatically. Run a single API instance (the queue is in-memory + DB claim).
 
+### Audio (mp3, m4a, aac, wav, flac, ogg/opus, wma)
+
+Audio reuses the video pipeline, so playlists, watch history, likes, search and recommendations work for it unchanged. A `Video` row has a `kind` (`Video` | `Audio`).
+
+1. `POST /api/videos` `{ "title", "description", "visibility", "kind": "Audio" }`
+2. `PUT /api/videos/{id}/source?fileName=song.mp3` with the raw bytes (same as video). The extension must match the kind (`Video:AllowedAudioExtensions`, up to `Video:MaxAudioUploadBytes`, 500 MB by default).
+
+The worker then: reads the embedded cover art (if any) into a 16:9 thumbnail (picture over a blurred copy of itself; no cover = no thumbnail, the UI shows a placeholder) and converts the sound to **audio-only HLS** at 128 kbps and 64 kbps (AAC, 10 s segments, renditions named `128k` / `64k`). The same `/api/stream/{id}/master.m3u8` endpoint serves it, so private audio is protected exactly like private videos.
+
+- List only audio / only video: `GET /api/videos?kind=Audio` and `GET /api/videos/mine?kind=Audio` (omit `kind` for both).
+- `kind` is also returned on every video DTO / list item.
+- **Needs a migration** (adds `Videos.Kind`, existing rows become `Video`):
+  `dotnet ef migrations add AddMediaKind -p src/MiniTube.Infrastructure -s src/MiniTube.Api` (the API applies it on startup).
+
 ### Playback tracking (views, history, likes)
 
 How the React player should use it:
@@ -176,7 +190,7 @@ storage-private/    (never served)               videos/{id}/source/original.mp4
 
 ### Config (`Video:*`)
 
-`MaxUploadBytes` (2 GB), `AllowedExtensions` (.mp4 .mov .m4v .mkv .webm .avi), `X264Preset` (veryfast; use `ultrafast` for quicker tests, `medium` for better compression), `MaxConcurrency` (1), `TimeoutMinutes`, `MaxDurationMinutes`, `KeepOriginal` (true).
+`MaxUploadBytes` (2 GB), `AllowedExtensions` (.mp4 .mov .m4v .mkv .webm .avi), `MaxAudioUploadBytes` (500 MB), `AllowedAudioExtensions` (.mp3 .m4a .aac .wav .flac .ogg .oga .opus .wma), `X264Preset` (veryfast; use `ultrafast` for quicker tests, `medium` for better compression), `MaxConcurrency` (1), `TimeoutMinutes`, `MaxDurationMinutes`, `KeepOriginal` (true).
 
 ## Email
 
@@ -247,6 +261,6 @@ Error responses are ProblemDetails; some include `"code"` (`invalid_token`, `acc
 
 - Unconfirmed users can log in, but endpoints guarded by `[Authorize(Policy = Policies.VerifiedEmail)]` (use it for video upload) need `email_verified=true` in the access token -> after confirming, the client calls `/api/auth/refresh`.
 - Avatars: JPEG/PNG/WebP up to 2 MB, decoded and re-encoded to 256x256 WebP (EXIF stripped), saved under `Storage:RootPath` and served from `/media/avatars/...`. `avatarUrl` in responses is relative: prefix it with the API base URL.
-- Security of the media pipeline: uploads are checked by extension, size (counted while streaming), and then by `ffprobe` (container whitelist, must contain a video stream). FFmpeg runs with `-protocol_whitelist file` and arguments are passed as a list, never through a shell. The `/api/stream` path is whitelisted by regex.
+- Security of the media pipeline: uploads are checked by extension, size (counted while streaming), and then by `ffprobe` (container whitelist, must contain a video stream, or a sound track for audio). FFmpeg runs with `-protocol_whitelist file` and arguments are passed as a list, never through a shell. The `/api/stream` path is whitelisted by regex.
 - Thumbnails are public by URL (unguessable GUID), like avatars; the video files themselves are protected by the visibility check.
 - ImageSharp has a split license (free for personal/open-source use and small companies); check it if you ever monetize.

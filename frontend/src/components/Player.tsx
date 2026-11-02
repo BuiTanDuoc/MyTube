@@ -1,6 +1,6 @@
-import { KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { Settings } from 'lucide-react';
+import { Music, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { videosApi, sendProgress } from '../api/endpoints';
 import { tokens } from '../api/tokens';
@@ -27,12 +27,18 @@ const MAX_NETWORK_RETRIES = 3;
 /**
  * HLS player (hls.js, native HLS on Safari) with a quality menu, resume, watch-progress heartbeat
  * and the "count a view after min(30 s, 50 %) of real watching" rule the API expects.
+ * Audio items use the same pipeline with an <audio> element, cover art and no quality menu.
  */
 export default function Player({ video, startAt, onEnded, onViewCounted }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  // <video> for videos, <audio> for audio tracks: everything below only needs the common media API
+  const videoRef = useRef<HTMLMediaElement | null>(null);
+  const setMedia = useCallback((node: HTMLMediaElement | null) => {
+    videoRef.current = node;
+  }, []);
+  const isAudio = video.kind === 'Audio';
   const hlsRef = useRef<Hls | null>(null);
 
   const [levels, setLevels] = useState<Level[]>([]);
@@ -114,6 +120,15 @@ export default function Player({ video, startAt, onEnded, onViewCounted }: Props
       setFailed(true);
     }
 
+    // Lock-screen / headset controls and "now playing" info (audio only)
+    if (isAudio && 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: video.title,
+        artist: video.owner.displayName,
+        artwork: video.thumbnailUrl ? [{ src: apiUrl(video.thumbnailUrl), sizes: '640x360', type: 'image/jpeg' }] : []
+      });
+    }
+
     const saveProgress = () => {
       if (hasPlayed && signedIn.current && el.currentTime > 0) sendProgress(video.id, el.currentTime);
     };
@@ -173,8 +188,9 @@ export default function Player({ video, startAt, onEnded, onViewCounted }: Props
       window.removeEventListener('pagehide', saveProgress);
       hls?.destroy();
       hlsRef.current = null;
+      if (isAudio && 'mediaSession' in navigator) navigator.mediaSession.metadata = null;
     };
-  }, [video.id, video.streamUrl, video.durationSeconds]);
+  }, [video.id, video.streamUrl, video.durationSeconds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const chooseLevel = (index: number) => {
     if (hlsRef.current) hlsRef.current.nextLevel = index; // -1 = automatic
@@ -215,17 +231,26 @@ export default function Player({ video, startAt, onEnded, onViewCounted }: Props
       : `${levels.find((l) => l.index === selected)?.height ?? ''}p`;
 
   return (
-    <div className="player" ref={wrapRef} onKeyDown={onKeyDown}>
-      <video
-        ref={videoRef}
-        controls
-        playsInline
-        preload="metadata"
-        poster={video.thumbnailUrl ? apiUrl(video.thumbnailUrl) : undefined}
-        aria-label={video.title}
-      />
+    <div className={`player ${isAudio ? 'player--audio' : ''}`} ref={wrapRef} onKeyDown={onKeyDown}>
+      {isAudio ? (
+        <>
+          <div className="player__cover">
+            {video.thumbnailUrl ? <img src={apiUrl(video.thumbnailUrl)} alt="" /> : <Music size={72} aria-hidden="true" />}
+          </div>
+          <audio ref={setMedia} controls preload="metadata" aria-label={video.title} />
+        </>
+      ) : (
+        <video
+          ref={setMedia}
+          controls
+          playsInline
+          preload="metadata"
+          poster={video.thumbnailUrl ? apiUrl(video.thumbnailUrl) : undefined}
+          aria-label={video.title}
+        />
+      )}
 
-      {levels.length > 1 && (
+      {!isAudio && levels.length > 1 && (
         <div className={`player__quality ${menuOpen ? 'is-open' : ''}`}>
           <button type="button" className="player__quality-btn" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
             <Settings size={15} />

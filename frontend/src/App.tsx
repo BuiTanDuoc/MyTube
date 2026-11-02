@@ -6,6 +6,7 @@ import RequireAuth from './auth/RequireAuth';
 import Layout from './components/layout/Layout';
 import Spinner from './components/Spinner';
 import AuthLayout from './pages/AuthLayout';
+import AudioPage from './pages/AudioPage';
 import ChannelPage from './pages/ChannelPage';
 import ConfirmEmailPage from './pages/ConfirmEmailPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -39,6 +40,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="watch/:id" element={<WatchPage />} />
+        <Route path="audio" element={<AudioPage />} />
         <Route path="results" element={<SearchPage />} />
         <Route path="channel/:id" element={<ChannelPage />} />
         <Route path="playlist/:id" element={<PlaylistPage />} />

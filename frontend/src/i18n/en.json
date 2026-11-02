@@ -16,7 +16,7 @@
     "home": "Home",
     "trending": "Trending",
     "you": "You",
-    "studio": "Your videos",
+    "studio": "Your library",
     "upload": "Upload",
     "signIn": "Sign in",
     "signOut": "Sign out",
@@ -25,7 +25,8 @@
     "history": "History",
     "playlists": "Playlists",
     "liked": "Liked videos",
-    "admin": "Administration"
+    "admin": "Administration",
+    "audio": "Audio"
   },
   "settings": {
     "theme": "Appearance",
@@ -177,13 +178,13 @@
     "resetDone": "Password updated. Please sign in."
   },
   "upload": {
-    "title": "Upload video",
+    "title": "Upload video or audio",
     "verifyTitle": "Confirm your email to upload",
     "verifyText": "We sent a confirmation link to {{email}}. Open it, then come back here.",
     "iConfirmed": "I've confirmed it",
     "stillUnverified": "Your email isn't confirmed yet.",
-    "drop": "Drag a video here or click to choose",
-    "dropHint": "{{types}} · up to {{size}}",
+    "drop": "Drag a video or audio file here, or click to choose",
+    "dropHint": "Video: {{videoTypes}} (up to {{videoSize}}) · Audio: {{audioTypes}} (up to {{audioSize}})",
     "badType": "Unsupported file type. Allowed: {{types}}",
     "tooLarge": "The file is larger than {{size}}.",
     "changeFile": "Change file",
@@ -200,16 +201,18 @@
     "watch": "Watch video",
     "another": "Upload another",
     "failed": "Upload failed",
-    "processingFailed": "The video could not be processed."
+    "processingFailed": "The file could not be processed.",
+    "readyAudio": "Your audio is ready",
+    "listen": "Play audio"
   },
   "studio": {
-    "title": "Your videos",
+    "title": "Your library",
     "empty": "You haven't uploaded anything yet",
-    "emptyHint": "Upload your first video to see it here.",
-    "editTitle": "Edit video",
-    "deleteTitle": "Delete video?",
+    "emptyHint": "Upload your first video or audio track to see it here.",
+    "editTitle": "Edit details",
+    "deleteTitle": "Delete this item?",
     "deleteConfirm": "“{{title}}” will be deleted permanently, including its likes and watch history.",
-    "deleted": "Video deleted.",
+    "deleted": "Deleted.",
     "saved": "Changes saved.",
     "reprocess": "Process again"
   },
@@ -289,5 +292,16 @@
     "reindex": "Rebuild search",
     "reindexHint": "Recomputes the accent-free search text of all videos and users",
     "reindexed": "Search rebuilt: {{videos}} videos, {{users}} users."
+  },
+  "kind": {
+    "all": "All",
+    "Video": "Video",
+    "Audio": "Audio",
+    "filter": "Media type"
+  },
+  "audio": {
+    "title": "Audio",
+    "empty": "No audio yet",
+    "emptyHint": "Public audio tracks will appear here."
   }
 }
